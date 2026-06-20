@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Tracker · Connexion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0E0F;
+    --bg-panel: #14181A;
+    --line: #232A2D;
+    --text: #EDECE8;
+    --text-dim: #8B9296;
+    --orange: #F7931A;
+    --red: #F85149;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .card {
+    width: 100%;
+    max-width: 380px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 32px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+  .brand .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 8px var(--orange);
+  }
+  h1 { font-size: 20px; margin-bottom: 6px; }
+  .sub { color: var(--text-dim); font-size: 14px; margin-bottom: 24px; }
+  label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  input:focus { outline: 2px solid var(--orange); outline-offset: 1px; }
+  button {
+    width: 100%;
+    background: var(--orange);
+    color: #0B0E0F;
+    border: none;
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .switch { text-align: center; margin-top: 18px; font-size: 13px; color: var(--text-dim); }
+  .switch a { color: var(--orange); text-decoration: none; cursor: pointer; }
+  .error { color: var(--red); font-size: 13px; margin-bottom: 12px; min-height: 0; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><span class="dot"></span> BTC TRACKER</div>
+    <h1 id="title">Connexion</h1>
+    <p class="sub" id="subtitle">Accédez à votre suivi de prix en temps réel.</p>
+
+    <div class="error" id="errorMsg"></div>
+
+    <form id="authForm">
+      <label for="email">Email</label>
+      <input type="email" id="email" required autocomplete="email">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" required autocomplete="current-password" minlength="6">
+      <button type="submit" id="submitBtn">Se connecter</button>
+    </form>
+
+    <div class="switch">
+      <span id="switchText">Pas encore de compte ?</span>
+      <a id="switchLink">Créer un compte</a>
+    </div>
+  </div>
+
+<script>
+  let mode = 'login';
+  const form = document.getElementById('authForm');
+  const title = document.getElementById('title');
+  const subtitle = document.getElementById('subtitle');
+  const submitBtn = document.getElementById('submitBtn');
+  const switchText = document.getElementById('switchText');
+  const switchLink = document.getElementById('switchLink');
+  const errorMsg = document.getElementById('errorMsg');
+
+  function setMode(newMode) {
+    mode = newMode;
+    errorMsg.textContent = '';
+    if (mode === 'login') {
+      title.textContent = 'Connexion';
+      subtitle.textContent = 'Accédez à votre suivi de prix en temps réel.';
+      submitBtn.textContent = 'Se connecter';
+      switchText.textContent = 'Pas encore de compte ?';
+      switchLink.textContent = 'Créer un compte';
+    } else {
+      title.textContent = 'Créer un compte';
+      subtitle.textContent = 'Inscrivez-vous pour démarrer votre abonnement.';
+      submitBtn.textContent = "S'inscrire";
+      switchText.textContent = 'Déjà un compte ?';
+      switchLink.textContent = 'Se connecter';
+    }
+  }
+
+  switchLink.addEventListener('click', () => setMode(mode === 'login' ? 'signup' : 'login'));
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMsg.textContent = '';
+    submitBtn.disabled = true;
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const endpoint = mode === 'login' ? '/api/login' : '/api/signup';
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorMsg.textContent = data.error || 'Une erreur est survenue.';
+        submitBtn.disabled = false;
+        return;
+      }
+      window.location.href = '/app';
+    } catch (err) {
+      errorMsg.textContent = 'Erreur réseau. Réessayez.';
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
