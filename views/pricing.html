@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC Tracker · Abonnement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0E0F; --bg-panel: #14181A; --line: #232A2D;
+    --text: #EDECE8; --text-dim: #8B9296; --orange: #F7931A; --red: #F85149;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .card {
+    width: 100%; max-width: 400px; background: var(--bg-panel);
+    border: 1px solid var(--line); border-radius: 12px; padding: 36px;
+    text-align: center;
+  }
+  .brand {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-dim); margin-bottom: 28px;
+  }
+  .brand .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 8px var(--orange); }
+  .price { font-family: 'JetBrains Mono', monospace; font-size: 48px; font-weight: 700; margin-bottom: 4px; }
+  .price span { font-size: 16px; color: var(--text-dim); font-weight: 500; }
+  .desc { color: var(--text-dim); font-size: 14px; margin-bottom: 28px; }
+  ul { list-style: none; text-align: left; margin-bottom: 28px; }
+  li { font-size: 14px; color: var(--text); padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; }
+  li:last-child { border-bottom: none; }
+  li::before { content: "✓"; color: var(--orange); font-weight: 700; }
+  button {
+    width: 100%; background: var(--orange); color: #0B0E0F; border: none;
+    border-radius: 6px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .error { color: var(--red); font-size: 13px; margin-top: 14px; }
+  .canceled { color: var(--text-dim); font-size: 13px; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><span class="dot"></span> BTC TRACKER</div>
+    <div class="price">7€ <span>/ mois</span></div>
+    <div class="desc">Suivi du prix Bitcoin en temps réel</div>
+    <ul>
+      <li>Prix en direct, actualisé chaque minute</li>
+      <li>Graphiques 24h / 7j / 30j</li>
+      <li>Plus haut, plus bas, capitalisation</li>
+      <li>Annulable à tout moment</li>
+    </ul>
+    <div class="canceled" id="canceledMsg" style="display:none;">Paiement annulé. Vous pouvez réessayer ci-dessous.</div>
+    <button id="subscribeBtn">S'abonner avec Stripe</button>
+    <div class="error" id="errorMsg"></div>
+  </div>
+
+<script>
+  if (new URLSearchParams(window.location.search).get('canceled')) {
+    document.getElementById('canceledMsg').style.display = 'block';
+  }
+
+  document.getElementById('subscribeBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('subscribeBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    btn.disabled = true;
+    btn.textContent = 'Redirection…';
+    errorMsg.textContent = '';
+
+    try {
+      const res = await fetch('/api/create-checkout-session', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        errorMsg.textContent = data.error || 'Erreur lors de la création du paiement.';
+        btn.disabled = false;
+        btn.textContent = "S'abonner avec Stripe";
+      }
+    } catch (err) {
+      errorMsg.textContent = 'Erreur réseau. Réessayez.';
+      btn.disabled = false;
+      btn.textContent = "S'abonner avec Stripe";
+    }
+  });
+</script>
+</body>
+</html>
