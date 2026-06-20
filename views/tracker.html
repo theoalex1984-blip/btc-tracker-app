@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BTC · Suivi de prix</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B0E0F;
+    --bg-panel: #14181A;
+    --line: #232A2D;
+    --text: #EDECE8;
+    --text-dim: #8B9296;
+    --orange: #F7931A;
+    --green: #3FB950;
+    --red: #F85149;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 80px;
+  }
+
+  .topbar {
+    width: 100%;
+    max-width: 720px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .account-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-email {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .ghost-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--text-dim);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .ghost-btn:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.04em;
+  }
+
+  .brand .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 8px var(--orange);
+  }
+
+  .currency-toggle {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  .currency-toggle button {
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .currency-toggle button.active {
+    background: var(--orange);
+    color: #0B0E0F;
+    font-weight: 700;
+  }
+
+  .ticker-panel {
+    width: 100%;
+    max-width: 720px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 20px;
+  }
+
+  .ticker-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .price {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(36px, 8vw, 56px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    transition: opacity 0.2s;
+  }
+
+  .change {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .change.up { color: var(--green); background: rgba(63,185,80,0.1); }
+  .change.down { color: var(--red); background: rgba(248,81,73,0.1); }
+
+  .meta-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .meta-item .meta-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+
+  .meta-item .meta-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  .chart-panel {
+    width: 100%;
+    max-width: 720px;
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .chart-header .ticker-label { margin-bottom: 0; }
+
+  .range-toggle {
+    display: flex;
+    gap: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+
+  .range-toggle button {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--line);
+    padding: 4px 9px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+  }
+
+  .range-toggle button.active {
+    color: var(--orange);
+    border-color: var(--orange);
+  }
+
+  svg { display: block; width: 100%; height: 220px; }
+
+  .status {
+    margin-top: 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status .pulse {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .status .pulse { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> BTC TRACKER</div>
+    <div class="topbar-right">
+      <div class="currency-toggle" id="currencyToggle">
+        <button data-currency="usd" class="active">USD</button>
+        <button data-currency="eur">EUR</button>
+      </div>
+      <div class="account-menu">
+        <span id="userEmail" class="user-email"></span>
+        <button id="manageBtn" class="ghost-btn">Gérer l'abonnement</button>
+        <button id="logoutBtn" class="ghost-btn">Déconnexion</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker-panel">
+    <div class="ticker-label">Bitcoin · BTC</div>
+    <div class="price-row">
+      <div class="price" id="price">—</div>
+      <div class="change" id="change24h">—</div>
+    </div>
+    <div class="meta-row">
+      <div class="meta-item">
+        <div class="meta-label">Plus haut 24h</div>
+        <div class="meta-value" id="high24h">—</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Plus bas 24h</div>
+        <div class="meta-value" id="low24h">—</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Cap. marché</div>
+        <div class="meta-value" id="marketCap">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-panel">
+    <div class="chart-header">
+      <div class="ticker-label">Historique</div>
+      <div class="range-toggle" id="rangeToggle">
+        <button data-days="1" class="active">24H</button>
+        <button data-days="7">7J</button>
+        <button data-days="30">30J</button>
+      </div>
+    </div>
+    <svg id="chart" viewBox="0 0 700 220" preserveAspectRatio="none"></svg>
+    <div class="status"><span class="pulse"></span> <span id="statusText">Connexion…</span></div>
+  </div><script>
+  const priceEl = document.getElementById('price');
+  const changeEl = document.getElementById('change24h');
+  const highEl = document.getElementById('high24h');
+  const lowEl = document.getElementById('low24h');
+  const capEl = document.getElementById('marketCap');
+  const statusEl = document.getElementById('statusText');
+  const chartEl = document.getElementById('chart');
+
+  let currency = 'usd';
+  let rangeDays = 1;
+  let refreshTimer = null;
+
+  const fmtPrice = (n) => new Intl.NumberFormat('fr-FR', {
+    style: 'currency', currency: currency.toUpperCase(), maximumFractionDigits: 0
+  }).format(n);
+
+  const fmtCompact = (n) => new Intl.NumberFormat('fr-FR', {
+    style: 'currency', currency: currency.toUpperCase(), notation: 'compact', maximumFractionDigits: 1
+  }).format(n);
+
+  async function fetchPrice() {
+    const url = `https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=${currency}&include_24hr_change=true&include_24hr_vol=true&include_market_cap=true`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur API prix');
+    const data = await res.json();
+    return data.bitcoin;
+  }
+
+  async function fetchHistory(days) {
+    const url = `https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=${currency}&days=${days}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur API historique');
+    const data = await res.json();
+    return data.prices;
+  }
+
+  function drawChart(points) {
+    const values = points.map(p => p[1]);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const w = 700, h = 220, pad = 8;
+    const range = (max - min) || 1;
+
+    const coords = points.map((p, i) => {
+      const x = pad + (i / (points.length - 1)) * (w - pad * 2);
+      const y = pad + (1 - (p[1] - min) / range) * (h - pad * 2);
+      return [x, y];
+    });
+
+    const isUp = values[values.length - 1] >= values[0];
+    const lineColor = isUp ? '#3FB950' : '#F85149';
+
+    const path = coords.map((c, i) => (i === 0 ? 'M' : 'L') + c[0].toFixed(1) + ',' + c[1].toFixed(1)).join(' ');
+    const areaPath = path + ` L${coords[coords.length-1][0].toFixed(1)},${h} L${coords[0][0].toFixed(1)},${h} Z`;
+
+    chartEl.innerHTML = `
+      <defs>
+        <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="${lineColor}" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="${lineColor}" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="${areaPath}" fill="url(#grad)" />
+      <path d="${path}" fill="none" stroke="${lineColor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    `;
+  }
+
+  async function refresh() {
+    try {
+      const [priceData, history] = await Promise.all([fetchPrice(), fetchHistory(rangeDays)]);
+
+      const price = priceData[currency];
+      const change = priceData[`${currency}_24h_change`];
+      const cap = priceData[`${currency}_market_cap`];
+
+      priceEl.style.opacity = 0;
+      setTimeout(() => {
+        priceEl.textContent = fmtPrice(price);
+        priceEl.style.opacity = 1;
+      }, 120);
+
+      const isUp = change >= 0;
+      changeEl.textContent = `${isUp ? '▲' : '▼'} ${Math.abs(change).toFixed(2)}%`;
+      changeEl.className = 'change ' + (isUp ? 'up' : 'down');
+
+      const values = history.map(p => p[1]);
+      highEl.textContent = fmtPrice(Math.max(...values));
+      lowEl.textContent = fmtPrice(Math.min(...values));
+      capEl.textContent = fmtCompact(cap);
+
+      drawChart(history);
+
+      const now = new Date();
+      statusEl.textContent = `Mis à jour à ${now.toLocaleTimeString('fr-FR')}`;
+    } catch (err) {
+      statusEl.textContent = 'Erreur de connexion — nouvelle tentative…';
+      console.error(err);
+    }
+  }
+
+  document.getElementById('currencyToggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#currencyToggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currency = btn.dataset.currency;
+    refresh();
+  });
+
+  document.getElementById('rangeToggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    document.querySelectorAll('#rangeToggle button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    rangeDays = parseInt(btn.dataset.days, 10);
+    refresh();
+  });
+
+  refresh();
+  refreshTimer = setInterval(refresh, 60000);
+
+  async function loadAccount() {
+    try {
+      const res = await fetch('/api/me');
+      if (!res.ok) { window.location.href = '/login'; return; }
+      const data = await res.json();
+      document.getElementById('userEmail').textContent = data.email;
+      if (!data.active) window.location.href = '/pricing';
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login';
+  });
+
+  document.getElementById('manageBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('manageBtn');
+    btn.disabled = true;
+    btn.textContent = '…';
+    try {
+      const res = await fetch('/api/create-portal-session', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        btn.textContent = "Gérer l'abonnement";
+        btn.disabled = false;
+      }
+    } catch (err) {
+      btn.textContent = "Gérer l'abonnement";
+      btn.disabled = false;
+    }
+  });
+
+  loadAccount();
+</script>
+</body>
+</html>
